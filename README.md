@@ -13,4 +13,4 @@ USE OF TWAP ORACLES:
   .Using TWAP Oracle, game knows how much tokens it cost for the fixed USD pricing.
   .Real-time market manipulators cannot momentarily cause pump or dump to manipulate prices in-game.
 
-After creating the teo TWAP Oracles, we create APIs for in-game server to use to obtain live average pricing data.
+After creating the two TWAP Oracles, we create APIs for in-game server to use to obtain live average pricing data.
