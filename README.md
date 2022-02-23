@@ -2,7 +2,7 @@ TWAP-Oracles
 Time-Weight-Average-Price Oracles for $HOL & $CAST 
 
 $HOL TIME-WEIGHTED AVERAGE PRICE (TWAP) ORACLE
--Determines average price of $HOL in USD in the last 1 hour between exchanges (XCAD DEX+ZILSWAP DEX).
+-Determines average price of $HOL in USD in the last 1 hour between exchanges (XCAD DEX + ZILSWAP DEX).
 
 $CAST TIME-WEIGHTED AVERAGE PRICE (TWAP) ORACLE
 -Determines average price of $CAST in USD in the last 1 hour from ZILSWAP DEX.
