@@ -20,7 +20,9 @@ contract HolTWAPOracle
 )
 
 (* Mutable fields *)
-
+field randNonce: Uint32 = Uint32 0
+field modulus: Uint32 = Uint32 1000
+field pendingRequests: Map ByStr20 Bool = Emp ByStr20 Bool
 
 (**************************************)
 (*             Procedures             *)
