@@ -6,7 +6,7 @@ scilla_version 0
 (***************************************************)
 import IntUtils PairUtils
 
-library HolTWAPOracle
+library CallerContract
 let one = Uint256 1
 (* Dummy user-defined ADT *)
 
@@ -15,15 +15,15 @@ let one = Uint256 1
 (***************************************************)
 (*             The contract definition             *)
 (***************************************************)
-contract HolTWAPOracle 
+contract CallerContract 
 (
     contract_owner: ByStr20
 )
 
 (* Mutable fields *)
-field randNonce: Uint256 = Uint256 0
-field modulus: Uint256 = Uint256 1000
-field pendingRequests: Map ByStr20 Bool = Emp ByStr20 Bool
+field TWAPHol: Option Uint256 = None {Uint256}
+field oracleAddress: Option ByStr20 = None {ByStr20}
+field myRequests: Map Uint256 Bool = Emp Uint256 Bool
 
 (**************************************)
 (*             Procedures             *)
@@ -33,9 +33,14 @@ field pendingRequests: Map ByStr20 Bool = Emp ByStr20 Bool
 (***************************************)
 (*             Transitions             *)
 (***************************************)
-transition getTWAPPrice()
+transition updateTWAPHolPrice()
     let cur_nonce = randNonceTemp <- randNonce in
     builtin add randNonceTemp one;
     randNonce := cur_nonce;
-    
+end
+
+transition callback()
+    let cur_nonce = randNonceTemp <- randNonce in
+    builtin add randNonceTemp one;
+    randNonce := cur_nonce;
 end
