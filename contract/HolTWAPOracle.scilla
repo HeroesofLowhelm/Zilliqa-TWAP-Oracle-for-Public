@@ -12,28 +12,28 @@ let one = Uint256 1
 (* Dummy user-defined ADT *)
 (* Error events *)
 type Error =
-| CodeIsSender
+| CodeIsOwner
 | CodeInsufficientFunds
 | CodeInsufficientAllowance
 
 let random =
-  fun (entropy: Uint256) =>
-  fun (block_number: BNum) =>
-  fun (addr: ByStr20) =>
-    let addr_hash = builtin keccak256hash addr in
-    let entropy_hash = builtin keccak256hash entropy in
-    let blockhash = builtin keccak256hash block_number in
-    let ehash = builtin concat entropy_hash blockhash in
-    let ahash = builtin concat ehash addr_hash in
-    let last_hash = builtin concat ehash ahash in
-    let hash = builtin keccak256hash last_hash in
-        builtin to_uint256 hash
+    fun (entropy: Uint256) =>
+    fun (block_number: BNum) =>
+    fun (addr: ByStr20) =>
+        let addr_hash = builtin keccak256hash addr in
+        let entropy_hash = builtin keccak256hash entropy in
+        let blockhash = builtin keccak256hash block_number in
+        let ehash = builtin concat entropy_hash blockhash in
+        let ahash = builtin concat ehash addr_hash in
+        let last_hash = builtin concat ehash ahash in
+        let hash = builtin keccak256hash last_hash in
+            builtin to_uint256 hash
 
 let make_error =
     fun (result : Error) =>
         let result_code = 
         match result with
-        | CodeIsSender              => Int32 -1
+        | CodeIsOwner               => Int32 -1
         | CodeInsufficientFunds     => Int32 -2
         | CodeInsufficientAllowance => Int32 -3
         end
@@ -65,10 +65,10 @@ procedure Throw(error: Error)
 end
 
 procedure IsNotOwner(address: ByStr20)
-    is_sender = builtin eq _sender address;
-    match is_sender with
+    is_owner = builtin eq contract_owner address;
+    match is_owner with
     | True =>
-        err = CodeIsSender;
+        err = CodeIsOwner;
         ThrowError err
     | False =>
     end
