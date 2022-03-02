@@ -79,6 +79,8 @@ end
 (***************************************)
 (*             Transitions             *)
 (***************************************)
+
+(* @dev: Generate random requset id and then returns it to the caller contract by invoking "receiveRequestId" transition  *)
 transition getTWAPPrice()
     cur_nonce = randNonceTemp <- randNonce in
         builtin add randNonceTemp one;
@@ -93,6 +95,10 @@ transition getTWAPPrice()
     send msgs
 end
 
+(* @dev: Returns TWAP of $HOL to _callerAddress by invoking "callback" transition on it. Only contract owner allowed to invoke.   *)
+(* param _twapPrice:      TWAP of $Hol.                                                                                           *)
+(* param _callerAddress:       Original sender address which invokes "getTWAPPrice" transition.                                   *)
+(* param _id:       Request id.                                                                                                   *)
 transition setTWAPPrice(Uint256 _twapPrice, ByStr20 _callerAddress, Uint256 _id)
     IsNotOwner _sender;
     isPendingRequest <- exists pendingRequests[_id];

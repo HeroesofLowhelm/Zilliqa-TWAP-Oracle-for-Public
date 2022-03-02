@@ -81,23 +81,32 @@ end
 (***************************************)
 (*             Transitions             *)
 (***************************************)
+
+(* @dev: Set Oracle Contract address. Only contract owner allowed to invoke.   *)
+(* param _oracleAddress:      Address of the oracle contract.                  *)
 transition setOracleAddress(ByStr20 _oracleAddress)
     oracleAddress := _oracleAddress
 end
 
+(* @dev: Transition for users to get TWAP of $Hol. This invokes getTWAPPrice() transition in the oracle contract   *)
 transition getTWAPHolPrice()
     oracleAddressTmp <- oracleAddress;
-    msg = {_tag: "getTWAPPrice", _recipient: or`acleAddressTmp, _amount: zero};
+    msg = {_tag: "getTWAPPrice", _recipient: oracleAddressTmp, _amount: zero};
     msgs = one_msg msg;
     send msgs
 end
 
+(* @dev: Receive request id from the oracle contract. Only oracle contract allowed to invoke.   *)
+(* param _id:      Request id.                                                                  *)
 transition receiveRequestId(Uint256 _id)
     IsNotOracle _sender;
     myRequests[_id] := True;
     e = {_eventname: "ReceivedNewRequestId", _id: _id}
 end
 
+(* @dev: Receive TWAP of $HOL and request id from oracle contract. Only oracle contract allowed to invoke  *)
+(* param _twapPrice:      TWAP of $Hol.                                                                    *)
+(* param _id:       Request id.                                                                            *)
 transition callback(Uint256 _twapPrice, Uint256 _id)
     IsNotOracle _sender;
     IsNotPendingRequest _id;
