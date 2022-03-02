@@ -68,10 +68,10 @@ end
 procedure IsNotOwner(address: ByStr20)
     is_owner = builtin eq contract_owner address;
     match is_owner with
-    | True =>
+    | False =>
         err = CodeIsOwner;
         ThrowError err
-    | False =>
+    | True =>
     end
 end
 
@@ -88,13 +88,13 @@ transition getTWAPPrice()
     pendingRequests[id] := True;
     e = {_eventname: "GetLatestTWAPHol"; _id: id};
     event e;
-    msg = {_tag: "setRequestId", _recipient: _sender, _amount: zero, _id: id};
+    msg = {_tag: "receiveRequestId", _recipient: _sender, _amount: zero, _id: id};
     msgs = one_msg msg;
     send msgs
 end
 
 transition setTWAPPrice(Uint256 _twapPrice, ByStr20 _callerAddress, Uint256 _id)
-    IsNotOwner(_sender);
+    IsNotOwner _sender;
     isPendingRequest <- exists pendingRequests[_id];
     match isPendingRequest with
     | False =>

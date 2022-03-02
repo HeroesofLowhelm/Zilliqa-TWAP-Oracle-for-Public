@@ -9,8 +9,25 @@ import IntUtils
 library CallerContract
 let one = Uint256 1
 let zero = Uint128 0
-(* Dummy user-defined ADT *)
 
+let one_msg = 
+    fun (msg : Message) => 
+        let nil_msg = Nil {Message} in
+        Cons {Message} msg nil_msg   
+(* Dummy user-defined ADT *)
+type Error =
+| CodeIsOracle
+| CodeIsPendingRequest
+
+let make_error =
+    fun (result : Error) =>
+        let result_code = 
+        match result with
+        | CodeIsOracle               => Int32 -1
+        | CodeIsPendingRequest       => Int32 -2
+        end
+        in
+        { _exception : "Error"; code : result_code }
 
 
 (***************************************************)
@@ -30,18 +47,61 @@ field myRequests: Map Uint256 Bool = Emp Uint256 Bool
 (*             Procedures             *)
 (**************************************)
 
+procedure Throw(error: Error)
+    e = make_error error;
+    throw e
+end
+
+
+
+
+procedure IsNotOracle(address: ByStr20)
+    oracleAddressTmp <- oracleAddress;
+    is_oracle = builtin eq oracleAddressTmp address;
+    match is_oracle with
+    | False =>
+        err = CodeIsOwner;
+        ThrowError err
+    | True =>
+    end
+end
+
+
+procedure IsNotPendingRequest(_id: Uint256)
+    isPendingRequest <- exists myRequests[_id];
+    match isPendingRequest with
+    | False =>
+        err = CodeIsPendingRequest
+        ThrowError err
+    | True =>
+    end
+end
+
 
 (***************************************)
 (*             Transitions             *)
 (***************************************)
-transition updateTWAPHolPrice()
-    let cur_nonce = randNonceTemp <- randNonce in
-    builtin add randNonceTemp one;
-    randNonce := cur_nonce;
+transition setOracleAddress(ByStr20 _oracleAddress)
+    oracleAddress := _oracleAddress
 end
 
-transition callback()
-    let cur_nonce = randNonceTemp <- randNonce in
-    builtin add randNonceTemp one;
-    randNonce := cur_nonce;
+transition getTWAPHolPrice()
+    oracleAddressTmp <- oracleAddress;
+    msg = {_tag: "getTWAPPrice", _recipient: or`acleAddressTmp, _amount: zero};
+    msgs = one_msg msg;
+    send msgs
+end
+
+transition receiveRequestId(Uint256 _id)
+    IsNotOracle _sender;
+    myRequests[_id] := True;
+    e = {_eventname: "ReceivedNewRequestId", _id: _id}
+end
+
+transition callback(Uint256 _twapPrice, Uint256 _id)
+    IsNotOracle _sender;
+    IsNotPendingRequest _id;
+    TWAPHol := _twapPrice;
+    e = {_eventname: "TWAPPriceUpdated", _price: _twapPrice};
+    event e
 end
