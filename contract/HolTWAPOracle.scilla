@@ -8,13 +8,12 @@ import IntUtils PairUtils
 
 library HolTWAPOracle
 let one = Uint256 1
-
+let zero = Uint128 0
 (* Dummy user-defined ADT *)
 (* Error events *)
 type Error =
 | CodeIsOwner
-| CodeInsufficientFunds
-| CodeInsufficientAllowance
+| CodeIsPendingRequest
 
 let random =
     fun (entropy: Uint256) =>
@@ -34,13 +33,15 @@ let make_error =
         let result_code = 
         match result with
         | CodeIsOwner               => Int32 -1
-        | CodeInsufficientFunds     => Int32 -2
-        | CodeInsufficientAllowance => Int32 -3
+        | CodeIsPendingRequest      => Int32 -2
         end
         in
         { _exception : "Error"; code : result_code }
 
-
+let one_msg = 
+    fun (msg : Message) => 
+        let nil_msg = Nil {Message} in
+        Cons {Message} msg nil_msg       
 
 (***************************************************)
 (*             The contract definition             *)
@@ -53,7 +54,7 @@ contract HolTWAPOracle
 (* Mutable fields *)
 field randNonce: Uint256 = Uint256 0
 field modulus: Uint256 = Uint256 1000
-field pendingRequests: Map ByStr20 Bool = Emp ByStr20 Bool
+field pendingRequests: Map Uint256 Bool = Emp Uint256 Bool
 
 (**************************************)
 (*             Procedures             *)
@@ -74,12 +75,37 @@ procedure IsNotOwner(address: ByStr20)
     end
 end
 
+
 (***************************************)
 (*             Transitions             *)
 (***************************************)
 transition getTWAPPrice()
-    let cur_nonce = randNonceTemp <- randNonce in
+    cur_nonce = randNonceTemp <- randNonce in
         builtin add randNonceTemp one;
     randNonce := cur_nonce;
-    
+    blk <- & BLOCKNUMBER;
+    id = random(cur_nonce, blk, _sender);
+    pendingRequests[id] := True;
+    e = {_eventname: "GetLatestTWAPHol"; _id: id};
+    event e;
+    msg = {_tag: "setRequestId", _recipient: _sender, _amount: zero, _id: id};
+    msgs = one_msg msg;
+    send msgs
+end
+
+transition setTWAPPrice(Uint256 _twapPrice, ByStr20 _callerAddress, Uint256 _id)
+    IsNotOwner(_sender);
+    isPendingRequest <- exists pendingRequests[_id];
+    match isPendingRequest with
+    | False =>
+        err = CodeIsPendingRequest
+        ThrowError err
+    | True =>
+    end;
+    delete pendingRequests[_id];
+    msg = {_tag: "callback", _recipient: _callerAddress, _amount: zero, _twapPrice: _twapPrice, _id: _id};
+    msgs = one_msg msg;
+    send msgs;
+    e = {_eventname: "SetLatestTWAPHol", _twapPrice: _twapPrice, _callerAddress: _callerAddress};
+    event e
 end
