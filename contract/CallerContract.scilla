@@ -4,10 +4,11 @@ scilla_version 0
 (***************************************************)
 (*               Associated library                *)
 (***************************************************)
-import IntUtils PairUtils
+import IntUtils
 
 library CallerContract
 let one = Uint256 1
+let zero = Uint128 0
 (* Dummy user-defined ADT *)
 
 
