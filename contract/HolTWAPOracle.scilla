@@ -90,7 +90,7 @@ transition getTWAPPrice()
     blk <- & BLOCKNUMBER;
     id = random cur_nonce blk _sender;
     pendingRequests[id] := true;
-    e = {_eventname: "GetLatestTWAPHol"; id: id};
+    e = {_eventname: "GetLatestTWAPHol"; id: id; callerAddress: _sender};
     event e;
     msg = {_tag: "receiveRequestId"; _recipient: _sender; _amount: zero; id: id};
     msgs = one_msg msg;

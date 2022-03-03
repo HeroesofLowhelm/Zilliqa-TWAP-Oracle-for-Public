@@ -19,6 +19,7 @@ type Error =
 | CodeIsOracle
 | CodeIsPendingRequest
 | CodeIsOracleAddressNotSet
+| CodeIsOwner
 
 let make_error =
     fun (result : Error) =>
@@ -27,6 +28,7 @@ let make_error =
         | CodeIsOracle               => Int32 -1
         | CodeIsPendingRequest       => Int32 -2
         | CodeIsOracleAddressNotSet  => Int32 -3
+        | CodeIsOwner                => Int32 -4
         end
         in
         { _exception : "Error"; code : result_code }
@@ -85,6 +87,15 @@ procedure IsNotPendingRequest(id: Uint256)
     end
 end
 
+procedure IsNotOwner(address: ByStr20)
+    is_owner = builtin eq contract_owner address;
+    match is_owner with
+    | False =>
+        err = CodeIsOwner;
+        ThrowError err
+    | True =>
+    end
+end
 
 (***************************************)
 (*             Transitions             *)
@@ -93,6 +104,7 @@ end
 (* @dev: Set Oracle Contract address. Only contract owner allowed to invoke.   *)
 (* param oracleAddress:      Address of the oracle contract.                  *)
 transition setOracleAddress(oracleAddr : ByStr20)
+    IsNotOwner _sender;
     oracleAddressTmp = Some {ByStr20} oracleAddr ;
     oracleAddress := oracleAddressTmp
 end

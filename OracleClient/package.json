@@ -9,7 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@zilliqa-js/crypto": "^3.3.4",
+    "@zilliqa-js/subscriptions": "^3.3.4",
+    "@zilliqa-js/util": "^3.3.4",
+    "@zilliqa-js/zilliqa": "^3.3.4",
     "axios": "^0.26.0",
     "bn.js": "^5.2.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0"
   }
 }
