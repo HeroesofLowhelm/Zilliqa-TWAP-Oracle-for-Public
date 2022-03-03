@@ -1,0 +1,22 @@
+{
+  "name": "twap-oracles",
+  "version": "1.0.0",
+  "description": "TWAP-Oracles\r Time-Weight-Average-Price Oracles for $HOL & $CAST",
+  "main": "index.js",
+  "scripts": {
+    "deploy-test": "nodemon deployContract.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HeroesofLowhelm/TWAP-Oracles.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HeroesofLowhelm/TWAP-Oracles/issues"
+  },
+  "homepage": "https://github.com/HeroesofLowhelm/TWAP-Oracles#readme",
+  "dependencies": {
+    "@zilliqa-js/zilliqa": "^3.3.4"
+  }
+}

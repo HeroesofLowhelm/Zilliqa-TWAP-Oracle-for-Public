@@ -9,7 +9,7 @@ import IntUtils
 library CallerContract
 let one = Uint256 1
 let zero = Uint128 0
-
+let true = True
 let one_msg = 
     fun (msg : Message) => 
         let nil_msg = Nil {Message} in
@@ -18,6 +18,7 @@ let one_msg =
 type Error =
 | CodeIsOracle
 | CodeIsPendingRequest
+| CodeIsOracleAddressNotSet
 
 let make_error =
     fun (result : Error) =>
@@ -25,6 +26,7 @@ let make_error =
         match result with
         | CodeIsOracle               => Int32 -1
         | CodeIsPendingRequest       => Int32 -2
+        | CodeIsOracleAddressNotSet  => Int32 -3
         end
         in
         { _exception : "Error"; code : result_code }
@@ -39,7 +41,7 @@ contract CallerContract
 )
 
 (* Mutable fields *)
-field TWAPHol: Option Uint256 = None {Uint256}
+field tWAPHol: Uint256 = Uint256 0
 field oracleAddress: Option ByStr20 = None {ByStr20}
 field myRequests: Map Uint256 Bool = Emp Uint256 Bool
 
@@ -47,7 +49,7 @@ field myRequests: Map Uint256 Bool = Emp Uint256 Bool
 (*             Procedures             *)
 (**************************************)
 
-procedure Throw(error: Error)
+procedure ThrowError(error: Error)
     e = make_error error;
     throw e
 end
@@ -57,21 +59,27 @@ end
 
 procedure IsNotOracle(address: ByStr20)
     oracleAddressTmp <- oracleAddress;
-    is_oracle = builtin eq oracleAddressTmp address;
-    match is_oracle with
-    | False =>
-        err = CodeIsOwner;
+    match oracleAddressTmp with
+    | Some v =>
+        is_oracle = builtin eq v address;
+        match is_oracle with
+        | False =>
+            err = CodeIsOracle;
+            ThrowError err
+        | True =>
+        end
+    | None =>
+        err = CodeIsOracleAddressNotSet;
         ThrowError err
-    | True =>
     end
 end
 
 
-procedure IsNotPendingRequest(_id: Uint256)
-    isPendingRequest <- exists myRequests[_id];
+procedure IsNotPendingRequest(id: Uint256)
+    isPendingRequest <- exists myRequests[id];
     match isPendingRequest with
     | False =>
-        err = CodeIsPendingRequest
+        err = CodeIsPendingRequest;
         ThrowError err
     | True =>
     end
@@ -83,34 +91,41 @@ end
 (***************************************)
 
 (* @dev: Set Oracle Contract address. Only contract owner allowed to invoke.   *)
-(* param _oracleAddress:      Address of the oracle contract.                  *)
-transition setOracleAddress(ByStr20 _oracleAddress)
-    oracleAddress := _oracleAddress
+(* param oracleAddress:      Address of the oracle contract.                  *)
+transition setOracleAddress(oracleAddr : ByStr20)
+    oracleAddressTmp = Some {ByStr20} oracleAddr ;
+    oracleAddress := oracleAddressTmp
 end
 
 (* @dev: Transition for users to get TWAP of $Hol. This invokes getTWAPPrice() transition in the oracle contract   *)
 transition getTWAPHolPrice()
     oracleAddressTmp <- oracleAddress;
-    msg = {_tag: "getTWAPPrice", _recipient: oracleAddressTmp, _amount: zero};
-    msgs = one_msg msg;
-    send msgs
+    match oracleAddressTmp with
+    | Some v =>
+        msg = {_tag: "getTWAPPrice"; _recipient: v; _amount: zero};
+        msgs = one_msg msg;
+        send msgs
+    | None =>
+        err = CodeIsOracleAddressNotSet;
+        ThrowError err
+    end
 end
 
 (* @dev: Receive request id from the oracle contract. Only oracle contract allowed to invoke.   *)
-(* param _id:      Request id.                                                                  *)
-transition receiveRequestId(Uint256 _id)
+(* param id:      Request id.                                                                  *)
+transition receiveRequestId(id: Uint256)
     IsNotOracle _sender;
-    myRequests[_id] := True;
-    e = {_eventname: "ReceivedNewRequestId", _id: _id}
+    myRequests[id] := true;
+    e = {_eventname: "ReceivedNewRequestId"; id: id}
 end
 
 (* @dev: Receive TWAP of $HOL and request id from oracle contract. Only oracle contract allowed to invoke  *)
-(* param _twapPrice:      TWAP of $Hol.                                                                    *)
-(* param _id:       Request id.                                                                            *)
-transition callback(Uint256 _twapPrice, Uint256 _id)
+(* param twapPrice:      TWAP of $Hol.                                                                    *)
+(* param id:       Request id.                                                                            *)
+transition callback(twapPrice: Uint256, id: Uint256)
     IsNotOracle _sender;
-    IsNotPendingRequest _id;
-    TWAPHol := _twapPrice;
-    e = {_eventname: "TWAPPriceUpdated", _price: _twapPrice};
+    IsNotPendingRequest id;
+    tWAPHol := twapPrice;
+    e = {_eventname: "TWAPPriceUpdated"; price: twapPrice};
     event e
 end

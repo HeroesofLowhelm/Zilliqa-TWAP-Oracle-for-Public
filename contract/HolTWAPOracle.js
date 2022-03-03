@@ -9,8 +9,6 @@ import IntUtils
 library HolTWAPOracle
 let one = Uint256 1
 let zero = Uint128 0
-let true = True
-let false = False
 (* Dummy user-defined ADT *)
 (* Error events *)
 type Error =
@@ -62,7 +60,7 @@ field pendingRequests: Map Uint256 Bool = Emp Uint256 Bool
 (*             Procedures             *)
 (**************************************)
 
-procedure ThrowError(error: Error)
+procedure Throw(error: Error)
     e = make_error error;
     throw e
 end
@@ -84,15 +82,15 @@ end
 
 (* @dev: Generate random requset id and then returns it to the caller contract by invoking "receiveRequestId" transition  *)
 transition getTWAPPrice()
-    randNonceTemp <- randNonce;
-    cur_nonce = builtin add randNonceTemp one;
+    cur_nonce = randNonceTemp <- randNonce in
+        builtin add randNonceTemp one;
     randNonce := cur_nonce;
     blk <- & BLOCKNUMBER;
-    id = random cur_nonce blk _sender;
-    pendingRequests[id] := true;
-    e = {_eventname: "GetLatestTWAPHol"; id: id};
+    id = random(cur_nonce, blk, _sender);
+    pendingRequests[id] := True;
+    e = {_eventname: "GetLatestTWAPHol"; _id: id};
     event e;
-    msg = {_tag: "receiveRequestId"; _recipient: _sender; _amount: zero; id: id};
+    msg = {_tag: "receiveRequestId", _recipient: _sender, _amount: zero, _id: id};
     msgs = one_msg msg;
     send msgs
 end
@@ -101,19 +99,19 @@ end
 (* param _twapPrice:      TWAP of $Hol.                                                                                           *)
 (* param _callerAddress:       Original sender address which invokes "getTWAPPrice" transition.                                   *)
 (* param _id:       Request id.                                                                                                   *)
-transition setTWAPPrice(twapPrice: Uint256, callerAddress: ByStr20, id: Uint256)
+transition setTWAPPrice(Uint256 _twapPrice, ByStr20 _callerAddress, Uint256 _id)
     IsNotOwner _sender;
-    isPendingRequest <- exists pendingRequests[id];
+    isPendingRequest <- exists pendingRequests[_id];
     match isPendingRequest with
     | False =>
-        err = CodeIsPendingRequest;
+        err = CodeIsPendingRequest
         ThrowError err
     | True =>
     end;
-    delete pendingRequests[id];
-    msg = {_tag: "callback"; _recipient: callerAddress; _amount: zero; twapPrice: twapPrice; id: id};
+    delete pendingRequests[_id];
+    msg = {_tag: "callback", _recipient: _callerAddress, _amount: zero, _twapPrice: _twapPrice, _id: _id};
     msgs = one_msg msg;
     send msgs;
-    e = {_eventname: "SetLatestTWAPHol"; twapPrice: twapPrice; callerAddress: callerAddress};
+    e = {_eventname: "SetLatestTWAPHol", _twapPrice: _twapPrice, _callerAddress: _callerAddress};
     event e
 end
