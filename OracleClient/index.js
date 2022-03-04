@@ -83,9 +83,12 @@ async function ListenForEvents(deployed_contract_base_16) {
         }
     });
 
-    subscriber.emitter.on(MessageType.NOTIFICATION, async (event) => {
-        console.log('get new Notifications: ', JSON.stringify(event)); // this will emit 2/3 times before event emitted
-    });
+    // subscriber.emitter.on(MessageType.NOTIFICATION, async (event) => {
+    //     console.log('get new Notifications: ', JSON.stringify(event)); // this will emit 2/3 times before event emitted
+    // });
+    // subscriber.emitter.on(MessageType.NEW_BLOCK, async (event) => {
+    //     console.log('New BLOCK=================>: ', JSON.stringify(event)); // this will emit 2/3 times before event emitted
+    // });
 
     await subscriber.start();
 }
@@ -128,7 +131,7 @@ async function setTWAPPrice (callerAddress, holTWAP, id) {
                 {
                     vname: 'twapPrice',
                     type: 'Uint256',
-                    value: holTWAP,
+                    value: holTWAP * (10 ** 20) + '',
                 },
                 {
                     vname: 'callerAddress',
@@ -152,7 +155,7 @@ async function setTWAPPrice (callerAddress, holTWAP, id) {
         );
         console.log("setting TWAP price step 2===========>", callTx.id);
         const confirmedTxn = await callTx.confirm(callTx.id);
-        console.log("setting TWAP price step 3===========>", confirmedTxn);
+        console.log("setting TWAP price step 3===========>", confirmedTxn.receipt);
         if (confirmedTxn.receipt.success === true) {
             console.log(`Contract address is: ${twapOracleContract.address}`);
         }
@@ -184,9 +187,22 @@ async function getTWAP() {
 }
 
 (async () => {
-    await initializeNetwork();
-    await  ListenForEvents(process.env.TWAP_ORACLE_ADDRESS);
+    try {
+        await initializeNetwork();
+    } catch (e) {
+        console.log("err while initializing====>", e);
+    }
+    try {
+        await  ListenForEvents(process.env.TWAP_ORACLE_ADDRESS);
+    } catch (e) {
+        console.log("err while listening events", e)
+    }
+
     setInterval(async () => {
-        await processQueue()
+        try {
+            await processQueue();
+        } catch (e) {
+            console.log("err while processing Queue=====>", e);
+        }
     }, SLEEP_INTERVAL)
 })()

@@ -124,20 +124,22 @@ transition getTWAPHolPrice()
 end
 
 (* @dev: Receive request id from the oracle contract. Only oracle contract allowed to invoke.   *)
-(* param id:      Request id.                                                                  *)
+(* param id:      Request id.                                                                   *)
 transition receiveRequestId(id: Uint256)
     IsNotOracle _sender;
     myRequests[id] := true;
-    e = {_eventname: "ReceivedNewRequestId"; id: id}
+    e = {_eventname: "ReceivedNewRequestId"; id: id};
+    event e
 end
 
 (* @dev: Receive TWAP of $HOL and request id from oracle contract. Only oracle contract allowed to invoke  *)
-(* param twapPrice:      TWAP of $Hol.                                                                    *)
-(* param id:       Request id.                                                                            *)
+(* param twapPrice:      TWAP of $Hol.                                                                     *)
+(* param id:       Request id.                                                                             *)
 transition callback(twapPrice: Uint256, id: Uint256)
     IsNotOracle _sender;
     IsNotPendingRequest id;
     tWAPHol := twapPrice;
     e = {_eventname: "TWAPPriceUpdated"; price: twapPrice};
-    event e
+    event e;
+    delete myRequests[id]
 end
