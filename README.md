@@ -16,7 +16,7 @@
 
 ### *Caller Contract*
 
-- Caller contract must set the oracle contract address first.
-- Then it need to call the getTWAPPrice() transition of Oracle Contract.
-- Then it need to define transition to receive request id. It's name must be receiveRequestId()
+- Caller contract must be set the oracle contract address first.
+- Then it needs to call the getTWAPPrice() transition of Oracle Contract.
+- Then it needs to define transition to receive request id. It's name must be receiveRequestId()
 - Lastly, there must be callback(twapPrice: Uint256, id: Uint256) transition to get the $HOL TWAP from the Oracle contract
