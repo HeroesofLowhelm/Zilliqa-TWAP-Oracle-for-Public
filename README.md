@@ -1,6 +1,6 @@
-# $HOL TIME-WEIGHTED AVERAGE PRICE (TWAP) ORACLE
+# TIME-WEIGHTED AVERAGE PRICE (TWAP) ORACLE FOR ZILLIQA CHAIN
 
-*Determines average price of $HOL in USD in the last 1 hour between exchanges (XCAD DEX + ZILSWAP DEX).*
+*Determines average price of $HOL (For this example) in USD in the last 1 hour between exchanges (XCAD DEX + ZILSWAP DEX).*
 ***
 
 ## Oracle Contract + Oracle Client
